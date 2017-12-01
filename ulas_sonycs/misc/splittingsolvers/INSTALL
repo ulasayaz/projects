@@ -1,0 +1,51 @@
+		SplittingSolvers INSTALL PROCEDURE UNDER UNIX/LINUX/MACOS X.
+		 TODO: this toolbox has not been tested under Windows.
+
+1. PREREQUISITE
+
+  a. Install the version .802 of WaveLab software package if it has not 
+   been installed; check 
+	http://www-stat.Stanford.edu/~wavelab/
+   for installation instructions.
+
+  b. Optional:
+
+    - The SplittingSolvers toolbox uses the undecimated DWT code from DSP Rice 
+    and the 2nd generation fast curvelet transform.
+    These two transforms are included for convenience in this package in the UDWT and CURV subdirectory.
+    Their mex files have been compiled for Unix Solaris/Linux/MACOS X.
+    Please see www.dsp-rice.edu and curvelet.org for licence agreement.
+    
+    NOTE: the CurveLab wrapping functions (i)fdct_wrapping.m have been slightly modified from the original 
+    to implement curvelets at the finest scale.
+    
+    - Some scripts also require SparseLab to be installed
+    		http://sparselab.stanford.edu/
+
+
+2. UNPACK THE ARCHIVE 
+
+  a. Copy SplittingSolvers.tgz to to the place you want the SplittingSolvers Directory to reside.
+
+  b. Uncompress
+
+     tar xfz SplittingSolvers.tgz
+
+  c. After you uncompress the file for your machine, you should have
+   the following directory structure:
+    	SplittingSolvers
+    	SplittingSolvers/1D/
+	SplittingSolvers/2D/
+	SplittingSolvers/Solvers/
+    	SplittingSolvers/CurveletToolbox/
+    	SplittingSolvers/UDWT/
+	SplittingSolvers/TVdyadic/
+    	SplittingSolvers/Utils/
+    	   	
+
+3. SET YOUR PATH
+   a. Edit the file FastSolvPath.m, modify the line to your path:
+	FASTSPARSESOLVERPATH = ['<AbsolutePathNameforSplittingSolversMainDirectory>'];
+
+   b. Be sure that FastSolvPath executes each time you start Matlab by modifying your startup.m.
+

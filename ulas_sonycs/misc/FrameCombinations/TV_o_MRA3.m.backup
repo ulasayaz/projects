@@ -1,0 +1,233 @@
+classdef TV_o_MRA3 < MultiResTransform3_Partial
+    % Frame transform composition of any 3d partial multiresolution transform
+    % in xy planes combined with total variation along z axis;
+    % The 2d MRA is applied to each z-plane separately;
+    % This class can be used e.g. as one of the two transforms in FrameTrafoPair.
+    %
+    % Example
+    % ========
+   % Example
+    % ========
+    % --- create signal:
+    %     signal3=Signal3D.make_fromVideo('tennis.avi',[1,3]);
+    %     % signal3.play_signal;
+    %     signal3.graph_totalVar;
+    % --- create transform object:
+    %     w= TV_o_MRA3(signal3);   
+    % --- choose 2d multi-resolution analysis:
+    %     w.set_transform(Wavelet2D_mlab());
+    % OR:  w.set_transform(Curvelet2_clab());
+    % --- perform decomposition (analysis):
+    %     w.dec;
+    %     w.show_trafo;
+    % --- test inversion properties:
+    %     ok=w.test_DecRec(); disp(ok);
+    %     ok=w.test_AnalyzeSynthsize(); disp(ok);
+    %
+    
+    properties
+        
+    end
+    
+    
+    
+    %% commands
+    methods
+        
+        function obj= TV_o_MRA3 (signal,hftrafo)
+            % constructor
+            if nargin==0
+                signal=Signal3D();
+            end
+            if nargin<2 || isempty(hftrafo)
+                if license('test','Wavelet_Toolbox')
+                    hftrafo=Wavelet2D_mlab();
+                else
+                    hftrafo=Wavelet2D_wlab();
+                end
+            end
+            obj = obj@MultiResTransform3_Partial(signal,hftrafo);           
+            
+            obj.ensure(true,'local','check invariant');
+        end
+        
+        function set_algo(obj)
+            set_algo@MultiResTransform3(obj);
+            obj.algo.name='(D_z,I) \circ MRA_{xy}';
+        end
+        
+        
+        function dec(obj,lev)
+            % partial discrete multiresolution analysis
+            % apply transform to each z-projection;
+            % the 2d MRA gets a weight of L to yield
+            % an approx. isometry (which is important fo the convergence
+            % of the CS-solvers).
+            obj.requireOnly(obj.ts.numel>0,'local','non-empty sample size');
+            
+            obj.ftrafo.ts.set_signal(obj.ts.xn(:,:,1));
+            if nargin <2
+                lev=obj.ftrafo.deepestlev();
+            end
+            
+            L=obj.ts.size(3);            
+           
+            obj.ftrafo.ts.set_signal(obj.ts.xn(:,:,1));
+            obj.ftrafo.dec(lev);
+                        
+            obj.C=cell(L,1);
+            cC=cell(L,1);
+            cC{1}=obj.ftrafo.C2vec;  
+            
+            % MRA (obj.ftrafo)            
+            for j=2:L
+                obj.ftrafo.ts.set_signal(obj.ts.xn(:,:,j));
+                obj.ftrafo.dec(lev);
+                cC{j}=obj.ftrafo.C2vec;  
+            end
+            
+            % TV: operating on result of MRA 
+            % remove MRA weight and use TV weight:
+            w1=obj.anweight1;
+            for j=2:obj.zref
+                obj.C{j-1}=obj.ftrafo.vec2C(w1*(cC{j}-cC{j-1}));
+            end
+            for j=obj.zref+1:L
+                obj.C{j}=obj.ftrafo.vec2C(w1*(cC{j}-cC{j-1}));
+            end
+            % only central frame gets MRA weight:
+            obj.C{obj.zref}=obj.ftrafo.vec2C((1-obj.anweight1)*cC{obj.zref});
+            
+            obj.ensureOnly(obj.isTrafodone,'local', 'wavelet trafo done');
+        end
+        
+        function yn=rec(obj,wc)
+            % yn=~(cC) % signal reconstruction of decomposition wc,
+            % which must be of the same datatype as result of obj.dec.
+            
+            L=obj.ts.size(3);
+            yn=zeros(obj.ts.size);
+            % remove MRA weight from central frame:
+            cCref0=obj.ftrafo.C2vec(wc{obj.zref})/(1-obj.anweight1);
+            cCref=cCref0;
+            
+            % undo TV (removing TV-weight)
+            for j=obj.zref+1:L
+                cC=obj.ftrafo.C2vec(wc{j})/obj.anweight1+cCref;
+                wc{j}=obj.ftrafo.vec2C(cC);
+                cCref=cC;
+            end
+            
+            cCref=cCref0;
+            for j=obj.zref-1:-1:1
+                cC=cCref-obj.ftrafo.C2vec(wc{j})/obj.anweight1;
+                wc{j}=obj.ftrafo.vec2C(cC);
+                cCref=cC;
+            end
+            
+            % undo MRA:
+            for j=1:L
+                yn(:,:,j) = obj.ftrafo.rec(wc{j});
+            end
+            yn(:,:,obj.zref)=yn(:,:,obj.zref)/(1-obj.anweight1);
+        end
+        
+    end
+    
+    
+    %% queries
+    
+    methods
+        
+        
+        function yn= analyze(obj,x)
+            % yn=~(x) decompose vector x into vector yn
+            % apply 2d transform to each z-projection
+            x=reshape(x,obj.N);
+            
+            L=obj.ts.size(3);
+            cC=reshape(obj.ftrafo.analyze((1-obj.anweight1)*x(:,:,1)),[],1);
+            yn=zeros(length(cC),L);
+            h=yn;
+            h(:,1)=cC;
+            % MRA:
+            for j=2:L
+                h(:,j)=reshape(obj.ftrafo.analyze((1-obj.anweight1)*x(:,:,j)),[],1);
+            end
+            
+            % TV: operating on result of MRA
+            yn(:,obj.zref)=h(:,obj.zref);   
+            % remove MRA weight and use TV weight:
+            %(only central frame keeps MRA weight)
+            w1=obj.anweight1/(1-obj.anweight1);
+            for j=2:obj.zref
+                yn(:,j-1)=w1*(h(:,j)-h(:,j-1));
+            end
+            for j=obj.zref+1:L
+                yn(:,j)=w1*(h(:,j)-h(:,j-1));
+            end
+            
+        end
+        
+        function xn= synthesize(obj,y)
+            % xn=~(y) synthesize signal from decomposition y, where
+            % y must beong to the same data type as result of analyze
+            % apply 2d transform to each z-projection
+            xn=zeros(obj.ts.size);
+            L=obj.ts.size(3);
+            y=reshape(y,[],L);
+            
+            % undo TV (removing MRA weight from central frame):
+            cCref0=y(:,obj.zref)/(1-obj.anweight1);
+            cCref=cCref0;
+            for j=obj.zref+1:L
+                y(:,j)=cCref+y(:,j)/obj.anweight1;
+                cCref=y(:,j);
+            end
+            cCref=cCref0;
+            for j=obj.zref-1:-1:1
+                y(:,j)=cCref-y(:,j)/obj.anweight1;
+                cCref=y(:,j);
+            end
+            
+            % undo MRA:
+            for j=1:obj.ts.size(3)
+                if j~=obj.zref
+                    xn(:,:,j) = obj.ftrafo.synthesize(y(:,j));
+                else
+                    xn(:,:,j) = obj.ftrafo.synthesize(y(:,j))/(1-obj.anweight1);
+                end
+            end
+        end
+        
+    end
+    
+    
+    %% transforms
+    methods
+        
+    end
+    
+    
+    %% statics
+    methods (Static)
+        
+        function w=make()
+            % contructor with universal name (callable by parent)
+            w= TV_o_MRA3 ();
+        end
+        
+    end
+    
+    %% graphics
+    
+    methods
+        
+    end
+    
+    %% invariant
+    
+    
+end
+
+

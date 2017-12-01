@@ -1,0 +1,7 @@
+%
+% Part of FastSparseSolver Version:100
+% Written by: Jalal Fadili, GREYC CNRS ENSICAEN
+% Created November 2007
+% This is Copyrighted Material
+% E-mail: Jalal.Fadili@greyc.ensicaen.fr
+%

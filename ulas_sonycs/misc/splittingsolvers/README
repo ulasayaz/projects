@@ -1,0 +1,17 @@
+SplittingSolvers is a collection of Matlab programs that implements:
+     * Monotone operator splitting for solving sparsity-regularized linear inverse problems.
+
+To reproduce figures and examples, see scripts in the SplittingSolvers/*D/Demos.
+
+
+download at http://www.greyc.ensicaen.fr/~jfadili/demos/WaveRestore/downloads/splittingsolvers.html.
+
+
+To install the package, see INSTALL.
+
+Contact:
+Jalal.Fadili@greyc.ensicaen.fr
+GREYC-CNRS-ENSICAEN, France
+http://www.greyc.ensicaen.fr/~jfadili/
+
+

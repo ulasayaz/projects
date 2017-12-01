@@ -1,0 +1,99 @@
+function img = fdct_wrapping_dispcoef_GT(C)
+
+% fdct_wrapping_dispcoef - returns an image containing all the curvelet coefficients
+%
+% Inputs
+%     C         Curvelet coefficients 
+%
+% Outputs
+%     img       Image containing all the curvelet coefficients. The coefficents are rescaled so that
+%       the largest coefficent in each subband has unit norm.
+% 
+% changes due to runtime errors (GT):
+% - case of not matching sizes handled (GT Jan 2014)   
+% - nbscales taken from C
+%
+    
+[m,n] = size(C{end}{1});  
+% nbscales = floor(log2(min(m,n)))-3;
+nbscales=length(C);  
+  
+  img = C{1}{1};  img = img/max(max(abs(img))); %normalize
+  for sc=2:nbscales-1
+    nd = length(C{sc})/4;
+    wcnt = 0;
+    
+    ONE = [];
+    for w=1:nd
+        add=C{sc}{wcnt+w};
+        s1=size(ONE); s2=size(add);
+        rowdiff=s2(1)-s1(1);
+        if rowdiff <0        
+            ONE=wkeep(ONE,[s1(1)+rowdiff,s1(2)]);
+        elseif rowdiff>0 && ~isempty(ONE)
+           add=wkeep(add,[s2(1)-rowdiff,s2(2)]);
+        end        
+        ONE = [ONE,add];
+    end
+    wcnt = wcnt+nd;
+    
+    TWO = [];
+    for w=1:nd
+        add=C{sc}{wcnt+w};
+        s1=size(TWO); s2=size(add);
+        coldiff=s2(2)-s1(2);
+        if coldiff <0        
+           TWO=wkeep(TWO,[s1(1),s1(2)+coldiff]);
+        elseif coldiff>0 && ~isempty(TWO)
+           add=wkeep(add,[s2(1),s2(2)-coldiff]);
+        end  
+        TWO = [TWO; add];
+    end
+    wcnt = wcnt+nd;
+    
+    THREE = [];
+    for w=1:nd
+        add=C{sc}{wcnt+w};
+        s1=size(THREE); s2=size(add);
+        rowdiff=s2(1)-s1(1);
+        if rowdiff <0        
+            THREE=wkeep(THREE,[s1(1)+rowdiff,s1(2)]);
+        elseif rowdiff>0 && ~isempty(THREE)
+           add=wkeep(add,[s2(1)-rowdiff,s2(2)]);
+        end  
+        THREE = [add, THREE];
+    end
+    wcnt = wcnt+nd;
+    
+    FOUR = [];
+    for w=1:nd
+        add=C{sc}{wcnt+w};
+        s1=size(FOUR); s2=size(add);
+        coldiff=s2(2)-s1(2);
+        if coldiff <0        
+           FOUR=wkeep(FOUR,[s1(1),s1(2)+coldiff]);
+        elseif coldiff>0 && ~isempty(FOUR)
+           add=wkeep(add,[s2(1),s2(2)-coldiff]);
+        end  
+       FOUR = [add; FOUR];
+    end
+    wcnt = wcnt+nd;
+    
+    [p,q] = size(img);
+    [a,b] = size(ONE);
+    [g,h] = size(TWO);
+    m = 2*a+g;    n = 2*h+b; %size of new image
+    scale = max(max( max(max(abs(ONE))),max(max(abs(TWO))) ), max(max(max(abs(THREE))), max(max(abs(FOUR))) )); %scaling factor
+    
+    new = 0.5 * ones(m,n); %background value
+    new(a+1:a+g,1:h) = FOUR /scale;
+    new(a+g+1:2*a+g,h+1:h+b) = THREE /scale;
+    new(a+1:a+g,h+b+1:2*h+b) = TWO /scale;
+    new(1:a,h+1:h+b) = ONE /scale; %normalize
+    
+    dx = floor((g-p)/2);    dy = floor((b-q)/2);
+    
+    new(a+1+dx:a+p+dx,h+1+dy:h+q+dy) = img;
+    
+    img = new;
+  end

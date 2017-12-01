@@ -1,0 +1,63 @@
+%  FastSparseSolver -- initialize path to include FastSparseSolver 
+%
+    global FASTSPARSESOLVER
+    FASTSPARSESOLVER = 100;
+    BVstr=num2str(FASTSPARSESOLVER);
+    
+	fprintf('\nWelcome to FASTSPARSESOLVER v %g\n\n', FASTSPARSESOLVER);
+%
+	global FASTSPARSESOLVERPATH
+	global PATHNAMESEPARATOR
+	global MATLABPATHSEPARATOR
+   
+%
+	Friend = computer;
+	if strcmp(Friend,'MAC2'),
+	  PATHNAMESEPARATOR = ':';
+	  FASTSPARSESOLVERPATH = ['Macintosh HD:Build:fastSolvEx', BVstr, PATHNAMESEPARATOR];
+	  MATLABPATHSEPARATOR = ';';
+	elseif isunix,
+	  PATHNAMESEPARATOR = '/';
+	  [s,HOME]	    = unix('echo $HOME');
+	  FASTSPARSESOLVERPATH = [HOME(1:end-1), PATHNAMESEPARATOR, 'articles/ada10/tutorials/tutorial1/splittingsolvers', PATHNAMESEPARATOR];
+	  MATLABPATHSEPARATOR = ':';
+	elseif strcmp(Friend(1:2),'PC');
+	  PATHNAMESEPARATOR = '\';	  
+	  FASTSPARSESOLVERPATH = [matlabroot,'\toolbox\fastSolvEx', BVstr, PATHNAMESEPARATOR];  
+	  MATLABPATHSEPARATOR = ';';
+	else
+		disp('I don''t recognize this computer; ')
+		disp('Pathnames not set; solution: edit SparsePath.m\n\n')
+	end
+%
+	global MATLABVERSION
+	V = version;
+	MATLABVERSION = str2num(V(1:3));
+
+    if MATLABVERSION < 5.3,
+        disp('Warning: This version is only supported on Matlab 7.x');
+        Sparsep=genpath(FASTSPARSESOLVERPATH,1);
+    else
+        Sparsep=genpath(FASTSPARSESOLVERPATH);
+    end
+    
+    addpath(Sparsep);   
+%
+	fprintf('Setting Global Variables:\n');
+	fprintf('   global MATLABVERSION = %g\n',            	MATLABVERSION)
+	fprintf('   global FastSparseSolverPATH = %s\n',	FASTSPARSESOLVERPATH)
+
+
+    if MATLABVERSION < 5.3,
+        disp('Warning: This version is only supported on Matlab 6.x and higher');
+        FSStoolbox=genpath(FASTSPARSESOLVERPATH,1);
+    else
+        FSStoolbox=genpath(FASTSPARSESOLVERPATH);
+    end
+    
+    path(FSStoolbox,path);
+    
+%
+    fprintf('   FastSparseSolver Path set successfully.\n');
+
+
