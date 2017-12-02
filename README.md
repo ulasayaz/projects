@@ -1,9 +1,13 @@
 # projects
-ulas_sonycs
+# ulas_sonycs
 
 application of compressive sensing algorithms to image sensors 
 
-2017.generative-model
+# 2015.depth-reconstruction
+
+depth reconstruction from undersampled depth profiles for robotoc sensors
+
+# 2017.generative-model
 
 iterative depth reconstruction using generative model and gradient descent
 dcgan
