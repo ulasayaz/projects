@@ -1,4 +1,4 @@
-# 2018.generative-model
+# invert-convolutional-generative-networks
 This repo implements the inversion a convolutional generative neural network for the NeurIPS (formerly abbreviated as NIPS) 2018 paper ["Invertibility of Convolutional Generative Networks from Partial Measurements"](https://papers.nips.cc/paper/2018/hash/e0ae4561193dbf6e4cf7e8f4006948e3-Abstract.html) by Fangchang Ma, Ulas Ayaz, and Sertac Karaman at MIT.
 
 ## dcgan
