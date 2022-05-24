@@ -19,14 +19,3 @@ Python code for testing image reconstruction based on a generative model (neural
 - If you have a Nvidia GPU and Cuda installed, run `python main.py --cuda`
 - Otherwise, run on cpu with `python main.py` 
 
-#### citation
-
-If you use our code or method in your work, please cite the following:
-
-@inproceedings{ma2018invertibility,
-	title={Invertibility of convolutional generative networks from partial measurements},
-	author={Ma, Fangchang and Ayaz, Ulas and Karaman, Sertac},
-	booktitle={Advances in Neural Information Processing Systems},
-	pages={9651--9660},
-	year={2018}
-}
