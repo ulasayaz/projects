@@ -6,6 +6,22 @@ cudnn.benchmark = True
 import torch.optim as optim
 from models import *
 
+def weights_init(m):
+    # Initialize filters with Gaussian random weights
+    if isinstance(m, nn.Conv2d):
+        n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+        m.weight.data.normal_(0, math.sqrt(2. / n))
+        if m.bias is not None:
+            m.bias.data.zero_()
+    elif isinstance(m, nn.ConvTranspose2d):
+        n = m.kernel_size[0] * m.kernel_size[1] * m.in_channels
+        m.weight.data.normal_(0, math.sqrt(2. / n))
+        if m.bias is not None:
+            m.bias.data.zero_()
+    elif isinstance(m, nn.BatchNorm2d):
+        m.weight.data.fill_(1)
+        m.bias.data.zero_()
+
 assert torch.cuda.is_available(), "Error: CUDA not available"
 
 parser = argparse.ArgumentParser(description='Invertible Neural Networks')
@@ -16,7 +32,7 @@ parser.add_argument('-ld', '--latent-dim', default=100, help='dimension of laten
 args = parser.parse_args()
 
 criterion = nn.MSELoss(reduction='sum')
-model = Generator().cuda()
+model = _netG().cuda()
 model.apply(weights_init) # Gaussian random weights
 model.eval()
 
